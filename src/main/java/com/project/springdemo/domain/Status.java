@@ -1,14 +1,13 @@
 package com.project.springdemo.domain;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.io.Serializable;
 @Entity
+@Table(name = "bp_status")
 public class Status implements Serializable {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bp_status_seq")
+    @SequenceGenerator(name = "bp_status_seq", sequenceName = "bp_status_id_seq", allocationSize = 1)
     @Column(name = "id")
     private Long id;
     @Column(name = "code")

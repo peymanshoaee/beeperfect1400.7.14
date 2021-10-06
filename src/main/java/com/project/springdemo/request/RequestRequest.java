@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
+import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RequestRequest implements Serializable {
@@ -24,6 +25,9 @@ public class RequestRequest implements Serializable {
 
     @JsonProperty("userId")
     private Long userId;
+
+    @JsonProperty("categoryIds")
+    private List<String> categoryIds;
 
     public Long getId() {
         return id;
@@ -71,5 +75,13 @@ public class RequestRequest implements Serializable {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public List<String> getCategoryIds() {
+        return categoryIds;
+    }
+
+    public void setCategoryIds(List<String> categoryIds) {
+        this.categoryIds = categoryIds;
     }
 }

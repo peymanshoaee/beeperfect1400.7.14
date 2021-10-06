@@ -3,13 +3,10 @@ package com.project.springdemo;
 import com.project.springdemo.exception.ServiceException;
 import com.project.springdemo.jwt.JwtAuth;
 import com.project.springdemo.jwt.JwtUtils;
-import com.project.springdemo.request.RequestConsoleRequest;
-import com.project.springdemo.request.RequestRequest;
-import com.project.springdemo.request.UserConsoleRequest;
-import com.project.springdemo.request.UserRequest;
+import com.project.springdemo.request.*;
 import com.project.springdemo.response.*;
 import com.project.springdemo.service.ExceptionError;
-import com.project.springdemo.service.RequestService;
+//import com.project.springdemo.service.RequestService;
 import com.project.springdemo.service.UserService;
 import com.project.springdemo.util.Helper;
 import org.apache.logging.log4j.LogManager;
@@ -37,19 +34,21 @@ public class MainController {
     private static final String LOG_SERVICE_EXCEPTION = "service exception is ===> {}";
     private final AuthenticationManager manager;
     private final JwtUtils jwtUtils;
-    private final RequestService requestService;
+    //private final RequestService requestService;
 
 
-    public MainController(Helper helper, UserService userService, AuthenticationManager manager, JwtUtils jwtUtils, RequestService requestService) {
+    public MainController(Helper helper, UserService userService, AuthenticationManager manager, JwtUtils jwtUtils/*, RequestService requestService*/) {
 
         this.helper=helper;
 
         this.userService = userService;
         this.manager = manager;
         this.jwtUtils = jwtUtils;
-        this.requestService = requestService;
+        //this.requestService = requestService;
     }
 
+
+    //region <Jwt Login>
 
     @PostMapping("/jwt/login")
     public @ResponseBody
@@ -69,80 +68,32 @@ public class MainController {
         return ResponseEntity.status(HttpStatus.OK).body(helper.fillResponseToken(ExceptionError.SUCCESSFUL,new Date(),token.get("token"),Long.parseLong(token.get("expireTime"))));
     }
 
-    @PostMapping(value = "/user/create")
+    //endregion
+
+    //region <User End Point>
+
+    @PostMapping(value = "/user/createTemp")
     public @ResponseBody
-    ResponseEntity<MainConsoleResponse> createUser(@RequestBody UserRequest model, @RequestParam("imageFile")MultipartFile imageFile)  {
-        try {
-            return ResponseEntity.status(HttpStatus.OK).body(userService.createUser(model.getUsername(),model.getPassword(),model.isEnabled(),model.getFirstName(),model.getLastName(),model.getUrl(),imageFile));
-        }
-        catch (ServiceException  e) {
-            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillMainConsoleResponse(e.getStatus()));
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillMainConsoleResponse(ExceptionError.IMAGE_FILE_IO_EXCEPTION));
-        }
 
+    ResponseEntity<LoginResponse> createTempUser(@RequestBody UserTempRequest model){
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(userService.createTempUser(model.getUsername(),model.getPassword(),model.getFirstName(),model.getLastName(),model.isTos(),model.isBusiness()));
+        } catch (ServiceException  e) {
+            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillResponseToken(e.getStatus(),new Date(),"",-1));
+        }
     }
 
-    @PostMapping(value = "user/update")
+    @PostMapping(value = "/user/verifyUser")
     public @ResponseBody
-    ResponseEntity<MainConsoleResponse> updateUser(@RequestBody UserRequest model,@RequestParam("imageFile")MultipartFile imageFile)  {
+    ResponseEntity<LoginResponse> verifyUser(@RequestBody RequestUserVerify model,HttpServletResponse response){
         try {
-            return ResponseEntity.status(HttpStatus.OK).body(userService.updateUser(model.getId(),model.getUsername(),model.getPassword(),model.isEnabled(),model.getFirstName(),model.getLastName(),model.getNickName(),imageFile));
-        }
-        catch (ServiceException e) {
+            LoginResponse loginResponse=userService.verifyUser(model.getToken(),model.getCode());
+            response.addHeader("Authorization",loginResponse.getToken() );
+            return ResponseEntity.status(HttpStatus.OK).body(loginResponse);
+        } catch (ServiceException  e) {
             log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillMainConsoleResponse(e.getStatus()));
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillMainConsoleResponse(ExceptionError.IMAGE_FILE_IO_EXCEPTION));
-        }
-
-    }
-
-    @PostMapping(value = "user/deleteUser/{id}")
-    public ResponseEntity<MainConsoleResponse> deleteUser(@PathVariable("id") Long id)  {
-        try {
-            return ResponseEntity.status(HttpStatus.OK).body(userService.deleteUser(id));
-        }
-        catch (ServiceException e) {
-            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillMainConsoleResponse(e.getStatus()));
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillMainConsoleResponse(ExceptionError.IMAGE_FILE_IO_EXCEPTION));
-        }
-
-    }
-
-    //@PreAuthorize("hasAuthority('OP_ACCESS_USER')")
-    @PostMapping("/user/list")
-    public @ResponseBody
-    ResponseEntity<UserConsoleResponse> getAllUser(@RequestBody UserConsoleRequest userConsoleRequest) {
-        return ResponseEntity.status(HttpStatus.OK).body( userService.getUserList(userConsoleRequest.getUsername(),userConsoleRequest.getPage(),userConsoleRequest.getSize()) );
-    }
-
-    //@PostAuthorize("returnObject.username==authentication.name")
-    @GetMapping(value = "/user/getById/{id}")
-    public @ResponseBody ResponseEntity<UserResponse> findUserById(@PathVariable("id") Long id) {
-
-        try {
-            UserConsoleReport userConsoleReport = userService.findById(id);
-            return ResponseEntity.status(HttpStatus.OK).body(helper.fillUserResponse(userConsoleReport,ExceptionError.SUCCESSFUL));
-        }catch (ServiceException e) {
-            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
-            UserConsoleReport userConsoleReport=new UserConsoleReport();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillUserResponse(userConsoleReport,e.getStatus()));
-        }catch (IOException e) {
-            e.printStackTrace();
-            UserConsoleReport userConsoleReport=new UserConsoleReport();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillUserResponse(userConsoleReport,ExceptionError.RETRIEVE_IMAGE_FILE_IO_EXCEPTION));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillResponseToken(e.getStatus(),new Date(),"",-1));
         }
     }
 
@@ -162,17 +113,96 @@ public class MainController {
         }
     }
 
+    @PostMapping(value = "/user/update")
+    public @ResponseBody
+    ResponseEntity<MainConsoleResponse> updateUser(@RequestBody UserRequest model,@RequestParam("imageFile")MultipartFile imageFile)  {
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(userService.updateUser(model.getId(),model.getUsername(),model.getPassword(),model.isEnabled(),model.getFirstName(),model.getLastName(),model.getNickName(),imageFile));
+        }
+        catch (ServiceException e) {
+            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillMainConsoleResponse(e.getStatus()));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillMainConsoleResponse(ExceptionError.IMAGE_FILE_IO_EXCEPTION));
+        }
+
+    }
 
 
+    //@PreAuthorize("hasAuthority('OP_ACCESS_USER')")
+    @PostMapping("/user/list")
+    public @ResponseBody
+    ResponseEntity<UserConsoleResponse> getAllUser(@RequestBody UserConsoleRequest userConsoleRequest) {
+        return ResponseEntity.status(HttpStatus.OK).body( userService.getUserList(userConsoleRequest.getUsername(),userConsoleRequest.getPage(),userConsoleRequest.getSize()) );
+    }
+
+    @PostMapping(value = "/user/deleteUser/{id}")
+    public ResponseEntity<MainConsoleResponse> deleteUser(@PathVariable("id") Long id)  {
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(userService.deleteUser(id));
+        }
+        catch (ServiceException e) {
+            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillMainConsoleResponse(e.getStatus()));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillMainConsoleResponse(ExceptionError.IMAGE_FILE_IO_EXCEPTION));
+        }
+
+    }
 
 
+    @PostMapping(value = "/user/create")
+    public @ResponseBody
+    ResponseEntity<MainConsoleResponse> createUser(@RequestBody UserRequest model, @RequestParam("imageFile")MultipartFile imageFile)  {
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(userService.createUser(model.getUsername(),model.getPassword(),model.isEnabled(),model.getFirstName(),model.getLastName(),model.getNickName(),model.isBusiness(),imageFile));
+        }
+        catch (ServiceException  e) {
+            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillMainConsoleResponse(e.getStatus()));
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillMainConsoleResponse(ExceptionError.IMAGE_FILE_IO_EXCEPTION));
+        }
 
+    }
+
+
+    //@PostAuthorize("returnObject.username==authentication.name")
+    @GetMapping(value = "/user/getById/{id}")
+    public @ResponseBody ResponseEntity<UserResponse> findUserById(@PathVariable("id") Long id) {
+
+        try {
+            UserConsoleReport userConsoleReport = userService.findById(id);
+            return ResponseEntity.status(HttpStatus.OK).body(helper.fillUserResponse(userConsoleReport,ExceptionError.SUCCESSFUL));
+        }catch (ServiceException e) {
+            log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
+            UserConsoleReport userConsoleReport=new UserConsoleReport();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillUserResponse(userConsoleReport,e.getStatus()));
+        }catch (IOException e) {
+            e.printStackTrace();
+            UserConsoleReport userConsoleReport=new UserConsoleReport();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillUserResponse(userConsoleReport,ExceptionError.RETRIEVE_IMAGE_FILE_IO_EXCEPTION));
+        }
+    }
+
+
+    //endregion
+
+    /*//region <Request>
 
     @PostMapping(value = "request/create")
     ResponseEntity<MainConsoleResponse> createRequest(@RequestBody RequestRequest model){
         try{
             return ResponseEntity.status(HttpStatus.OK).body(requestService.createRequest(model.getTitle(),model.getDesc(),
-                    model.getMinAmount(),model.getMaxAmount(),model.getUserId()));
+                    model.getMinAmount(),model.getMaxAmount(),model.getUserId(),model.getCategoryIds()));
         }
         catch (ServiceException  e) {
             log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
@@ -210,6 +240,7 @@ public class MainController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillRequestResponse(requestConsoleReport,e.getStatus()));
         }
     }
+    //endregion*/
 
     /*@GetMapping("/jwt/hello")
     public @ResponseBody  String getHello(){

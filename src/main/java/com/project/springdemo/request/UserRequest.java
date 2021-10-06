@@ -27,6 +27,9 @@ public class UserRequest implements Serializable {
     @JsonProperty("Url")
     private String url;
 
+    @JsonProperty("business")
+    private boolean business;
+
    /* @JsonProperty("Image")
     private String image;*/
 
@@ -86,6 +89,14 @@ public class UserRequest implements Serializable {
         this.url = url;
     }
 
+    public boolean isBusiness() {
+        return business;
+    }
+
+    public void setBusiness(boolean business) {
+        this.business = business;
+    }
+
     /*public String getImage() {
         return image;
     }
@@ -104,7 +115,7 @@ public class UserRequest implements Serializable {
 
     @Override
     public String toString() {
-        return "UserJson{" +
+        return "UserRequest{" +
                 "id=" + id +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
@@ -113,6 +124,7 @@ public class UserRequest implements Serializable {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", url='" + url + '\'' +
+                ", business=" + business +
                 '}';
     }
 }

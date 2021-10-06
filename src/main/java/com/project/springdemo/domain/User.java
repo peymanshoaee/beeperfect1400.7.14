@@ -1,7 +1,9 @@
 package com.project.springdemo.domain;
 
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.project.springdemo.enums.UserRoles;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.Type;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -10,12 +12,15 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
-//@Table(name = "user_tbl")
+@Table(name = "bp_user")
 public class User implements Serializable, UserDetails {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bp_user_seq")
+    @SequenceGenerator(name = "bp_user_seq", sequenceName = "bp_user_id_seq", allocationSize = 1)
+
     @Column(name = "id")
     private Long id;
 
@@ -34,30 +39,37 @@ public class User implements Serializable, UserDetails {
     @Column(name = "nick_name")
     private String nickName;
 
-    @Column(name = "Url")
+    @Column(name = "url")
     private String url;
 
     @Lob
-    @Column(name = "Image")
+    @Type(type="org.hibernate.type.ImageType")
+    @Column(name = "image")
     private byte[] image;
 
     @Column(name = "enabled")
-    private boolean enabled=true;
+    private boolean enabled=false;
 
     @Column(name = "business")
-    private boolean business=true;
+    private boolean business=false;
 
-    @OneToMany(mappedBy = "user")
-    @JsonBackReference
-    private List<Request> requests;
+    @Column(name = "tos")
+    private boolean tos=false;
 
-    /*@ElementCollection(targetClass = UserRoles.class,fetch = FetchType.EAGER)
-    @CollectionTable(name = "authorities", joinColumns = @JoinColumn(name = "username",referencedColumnName = "username"))
-    @Enumerated(EnumType.STRING)
-    List<UserRoles> userRoles;*/
+    @Column(name = "token")
+    private String token;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    private List<Roles> roles;
+    @Column(name = "verify_code")
+    private String verifyCode;
+
+    /*@OneToMany(fetch = FetchType.EAGER,mappedBy = "user")
+    @JsonIgnore
+    private List<Request> requests;*/
+
+
+
+    @OneToMany(fetch = FetchType.EAGER,mappedBy = "user")
+    public List<UserAuthority> userAuthorityList = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -119,12 +131,52 @@ public class User implements Serializable, UserDetails {
         this.business = business;
     }
 
-    public List<Request> getRequests() {
+   /* public List<Request> getRequests() {
         return requests;
     }
 
     public void setRequests(List<Request> requests) {
         this.requests = requests;
+    }*/
+
+    /*public List<Roles> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Roles> roles) {
+        this.roles = roles;
+    }*/
+
+    public List<UserAuthority> getUserAuthorityList() {
+        return userAuthorityList;
+    }
+
+    public void setUserAuthorityList(List<UserAuthority> userAuthorityList) {
+        this.userAuthorityList = userAuthorityList;
+    }
+
+    public boolean isTos() {
+        return tos;
+    }
+
+    public String getVerifyCode() {
+        return verifyCode;
+    }
+
+    public void setVerifyCode(String verifyCode) {
+        this.verifyCode = verifyCode;
+    }
+
+    public void setTos(boolean tos) {
+        this.tos = tos;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     @Override
@@ -148,11 +200,12 @@ public class User implements Serializable, UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<GrantedAuthority> authorities=new ArrayList<>();
-        for (Roles role:roles){
-            authorities.addAll(role.getAuthorities());
+        /*List<GrantedAuthority> authorities=new ArrayList<>();
+        for (UserAuthority userAuthority:userAuthorityList){
+            authorities.addAll(userAuthority.getAuthority());
         }
-        return authorities;
+        return authorities;*/
+        return userAuthorityList.stream().map(UserAuthority::getAuthority).collect(Collectors.toList());
     }
 
     public String getPassword() {
@@ -171,11 +224,5 @@ public class User implements Serializable, UserDetails {
         this.enabled = enabled;
     }
 
-    public List<Roles> getRoles() {
-        return roles;
-    }
 
-    public void setRoles(List<Roles> roles) {
-        this.roles = roles;
-    }
 }

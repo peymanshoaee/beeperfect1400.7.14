@@ -1,15 +1,14 @@
 package com.project.springdemo.domain;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
-public class Category  implements Serializable {
+@Table(name = "bp_category")
+public class Category implements Serializable {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bp_category_seq")
+    @SequenceGenerator(name = "bp_category_seq", sequenceName = "bp_category_id_seq", allocationSize = 1)
     @Column(name = "id")
     private Long id;
     @Column(name = "code")
@@ -40,4 +39,6 @@ public class Category  implements Serializable {
     public void setTitle(String title) {
         this.title = title;
     }
+
+
 }

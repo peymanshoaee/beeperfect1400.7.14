@@ -2,8 +2,10 @@ package com.project.springdemo.service.impl;
 
 import com.project.springdemo.domain.User;
 import com.project.springdemo.exception.ServiceException;
+import com.project.springdemo.jwt.JwtUtils;
 import com.project.springdemo.repository.UserRepository;
 import com.project.springdemo.request.UserRequest;
+import com.project.springdemo.response.LoginResponse;
 import com.project.springdemo.response.MainConsoleResponse;
 import com.project.springdemo.response.UserConsoleReport;
 import com.project.springdemo.response.UserConsoleResponse;
@@ -12,12 +14,19 @@ import com.project.springdemo.service.UserService;
 import com.project.springdemo.util.Helper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -28,25 +37,30 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
     private final Logger log = LogManager.getLogger(getClass());
     private final UserRepository userRepository;
     private final Helper helper;
+    private final JavaMailSender javaMailSender;
+    private final com.project.springdemo.jwt.JwtUtils jwtUtils;
 
-    public UserServiceImpl(UserRepository userRepository, Helper helper) {
+
+    public UserServiceImpl(UserRepository userRepository, Helper helper, JavaMailSender javaMailSender, JwtUtils JwtUtils) {
         this.userRepository = userRepository;
         this.helper = helper;
+        this.javaMailSender = javaMailSender;
+        this.jwtUtils = JwtUtils;
+
     }
 
 
     @Override
     public MainConsoleResponse createUser(String username, String password, boolean enabled,
                                           String firstName, String lastName, String nickName,
+                                          boolean business,
                                           MultipartFile imageFile) throws ServiceException, IOException {
         User user=new User();
         if(username!=null && !username.equals("")){
@@ -65,6 +79,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setNickName(nickName);
+        user.setBusiness(business);
 
         //region<Save Image to DB>
         //String imgPath="C:\\Users\\Home\\Desktop\\Sample\\13.jpg";
@@ -150,6 +165,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return convertToJson(userRepository.findById(id).orElseThrow(() -> new ServiceException("user not found" , ExceptionError.USER_MODEL_NOT_FOUND)));
 
     }
+
     @Override
     public UserConsoleReport findByUserNameAndPassword(String username,String password) throws ServiceException, IOException {
         User user=userRepository.findByUsernameAndPassword(username,password);
@@ -168,11 +184,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             return new ServiceException("Users Not Found", ExceptionError.USER_MODEL_NOT_FOUND);
         });
         Files.deleteIfExists(Paths.get(user.getUrl()));
-        userRepository.delete(user);
+        user.setEnabled(false);
+        userRepository.save(user);
         return helper.fillMainConsoleResponse(ExceptionError.SUCCESSFUL);
     }
 
-    @PreAuthorize("#user.username != authentication.name")
+    //@PreAuthorize("#user.username != authentication.name")
     @Override
     public void deleteByUser(UserRequest user ){
         userRepository.deleteById(user.getId());
@@ -284,5 +301,77 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public User getUserById(Long id){
         return userRepository.getById(id);
+    }
+
+    @Override
+    public LoginResponse createTempUser(String username, String password, String firstName, String lastName, boolean tos ,boolean business)throws ServiceException{
+        if(tos==true){
+
+            if(username!=null && !username.equals("")){
+                if(userRepository.findByUsername(username)!=null){
+                    log.error("User is Exist");
+                    throw new ServiceException("User is Exist", ExceptionError.USER_MODEL_USERNAME_IS_EXIST);
+                }
+
+            }
+            if(password==null || password.equals("")){
+                log.error("Password Is Null");
+                throw new ServiceException("Password Is Null", ExceptionError.USER_MODEL_PASSWORD_IS_NULL);
+            }
+
+            User user=new User();
+            user.setUsername(username);
+            user.setPassword(password);
+            user.setFirstName(firstName);
+            user.setLastName(lastName);
+            user.setTos(tos);
+            user.setEnabled(false);
+            user.setBusiness(business);
+            Random rand = new Random();
+            int resRandom = rand.nextInt((9999 - 100) + 1) + 10;
+            user.setVerifyCode(String.valueOf(resRandom));
+            Map<String, String> token=jwtUtils.generateToken(user.getUsername());
+            user.setToken(token.get("token"));
+            //user.setId(2L);
+            userRepository.save(user);
+
+            return helper.fillResponseToken(ExceptionError.SUCCESSFUL,new Date(),token.get("token"),Long.parseLong(token.get("expireTime")));
+        }
+        return helper.fillResponseToken(ExceptionError.USER_TOS_IS_REQUIRED,new Date(),"",-1);
+    }
+
+    public void sendEmail(){
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo("1@gmail.com", "2@yahoo.com");
+
+        msg.setSubject("Testing from Spring Boot");
+        msg.setText("Hello World \n Spring Boot Email");
+
+        javaMailSender.send(msg);
+    }
+
+    @Override
+    public LoginResponse verifyUser(String token,String verifyCode) throws ServiceException{
+        String userName=jwtUtils.getUserName(token);
+        User user=userRepository.findByUsername(userName);
+        if(user==null){
+            log.error("User Not Exist");
+            throw new ServiceException("User Not Exist", ExceptionError.USER_MODEL_NOT_FOUND);
+        }
+        if(!user.getVerifyCode().equals(verifyCode)){
+            log.error("VerifyCode Wrong");
+            throw new ServiceException("VerifyCode Wrong", ExceptionError.USER_VERIFY_CODE_IS_WRONG);
+        }
+        user.setEnabled(true);
+        userRepository.save(user);
+
+        /*try {
+            manager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
+        }catch (Exception e){
+            //return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return helper.fillResponseToken(ExceptionError.BAD_REQUEST,new Date(),"",-1);
+        }*/
+        Map<String, String> tokenGenerate=jwtUtils.generateToken(user.getUsername());
+        return helper.fillResponseToken(ExceptionError.SUCCESSFUL,new Date(),tokenGenerate.get("token"),Long.parseLong(tokenGenerate.get("expireTime")));
     }
 }

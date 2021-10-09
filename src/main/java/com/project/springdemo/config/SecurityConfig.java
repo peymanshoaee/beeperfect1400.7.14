@@ -1,5 +1,6 @@
 package com.project.springdemo.config;
 
+import com.project.springdemo.jwt.JwtAuthenticationEntryPoint;
 import com.project.springdemo.jwt.JwtFilter;
 import com.project.springdemo.service.UserService;
 import com.project.springdemo.service.impl.UserServiceImpl;
@@ -10,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
@@ -24,12 +26,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final DataSource dataSource;
     private final UserServiceImpl userServiceImpl;
     private final JwtFilter jwtFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    public SecurityConfig(DataSource dataSource, UserServiceImpl userServiceImpl, JwtFilter jwtFilter) {
+    public SecurityConfig(DataSource dataSource, UserServiceImpl userServiceImpl, JwtFilter jwtFilter, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
         this.dataSource = dataSource;
 
         this.userServiceImpl = userServiceImpl;
         this.jwtFilter = jwtFilter;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
     }
 
     @Override
@@ -40,10 +44,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 /*.antMatchers("/users/**").hasAnyAuthority("USER","ADMIN")
                 .antMatchers("/admin/**").hasAnyAuthority("ADMIN")*/
                 .anyRequest().authenticated()
+                .and().exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and().addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+
                 //.and().formLogin().loginPage("/login")
                 ;//.usernameParameter("username");
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
     }
 

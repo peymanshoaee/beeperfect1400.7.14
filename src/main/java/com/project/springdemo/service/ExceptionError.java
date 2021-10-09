@@ -16,4 +16,5 @@ public interface ExceptionError {
     int REQUEST_MODEL_NOT_FOUND=7;
 
     int CATEGORY_MODEL_NOT_FOUND=8;
+    int USER_NOT_PERMISSION=9;
 }

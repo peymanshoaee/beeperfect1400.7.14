@@ -10,6 +10,9 @@ INSERT INTO bp_status(id, code, description) VALUES(7, '4', 'کد وارد شد�
 INSERT INTO bp_status(id, code, description) VALUES(8, '5', 'قوانین سایت اجباری است');
 INSERT INTO bp_status(id, code, description) VALUES(9, '6', 'عنوان درخواست اجباری است');
 INSERT INTO bp_status(id, code, description) VALUES(10, '7', 'درخواست یافت نشد');
+INSERT INTO bp_status(id, code, description) VALUES(11, '8', 'دستبه بندی یافت نشد');
+INSERT INTO bp_status(id, code, description) VALUES(12, '9', 'کاربر دسترسی ندارد');
+
 
 INSERT INTO bp_category(id, code, title) VALUES(1, '1', 'تشریفات');
 INSERT INTO bp_category(id, code, title) VALUES(2, '2', 'آرایشی بهداشتی');

@@ -6,7 +6,7 @@ import com.project.springdemo.jwt.JwtUtils;
 import com.project.springdemo.request.*;
 import com.project.springdemo.response.*;
 import com.project.springdemo.service.ExceptionError;
-//import com.project.springdemo.service.RequestService;
+import com.project.springdemo.service.RequestService;
 import com.project.springdemo.service.UserService;
 import com.project.springdemo.util.Helper;
 import org.apache.logging.log4j.LogManager;
@@ -34,10 +34,10 @@ public class MainController {
     private static final String LOG_SERVICE_EXCEPTION = "service exception is ===> {}";
     private final AuthenticationManager manager;
     private final JwtUtils jwtUtils;
-    //private final RequestService requestService;
+    private final RequestService requestService;
 
 
-    public MainController(Helper helper, UserService userService, AuthenticationManager manager, JwtUtils jwtUtils/*, RequestService requestService*/) {
+    public MainController(Helper helper, UserService userService, AuthenticationManager manager, JwtUtils jwtUtils, RequestService requestService) {
 
         this.helper=helper;
 
@@ -45,6 +45,7 @@ public class MainController {
         this.manager = manager;
         this.jwtUtils = jwtUtils;
         //this.requestService = requestService;
+        this.requestService = requestService;
     }
 
 
@@ -74,7 +75,6 @@ public class MainController {
 
     @PostMapping(value = "/user/createTemp")
     public @ResponseBody
-
     ResponseEntity<LoginResponse> createTempUser(@RequestBody UserTempRequest model){
         try {
             return ResponseEntity.status(HttpStatus.OK).body(userService.createTempUser(model.getUsername(),model.getPassword(),model.getFirstName(),model.getLastName(),model.isTos(),model.isBusiness()));
@@ -196,7 +196,7 @@ public class MainController {
 
     //endregion
 
-    /*//region <Request>
+    //region <Request>
 
     @PostMapping(value = "request/create")
     ResponseEntity<MainConsoleResponse> createRequest(@RequestBody RequestRequest model){
@@ -210,7 +210,7 @@ public class MainController {
         }
     }
 
-    @PostMapping(value = "request/update")
+    /*@PostMapping(value = "request/update")
     ResponseEntity<MainConsoleResponse> updateRequest(@RequestBody RequestRequest model){
         try{
             return ResponseEntity.status(HttpStatus.OK).body(requestService.updateRequest(model.getId(),model.getTitle(),model.getDesc(),
@@ -239,8 +239,8 @@ public class MainController {
             RequestConsoleReport requestConsoleReport=new RequestConsoleReport();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillRequestResponse(requestConsoleReport,e.getStatus()));
         }
-    }
-    //endregion*/
+    }*/
+    //endregion
 
     /*@GetMapping("/jwt/hello")
     public @ResponseBody  String getHello(){

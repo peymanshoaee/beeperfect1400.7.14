@@ -363,7 +363,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             throw new ServiceException("VerifyCode Wrong", ExceptionError.USER_VERIFY_CODE_IS_WRONG);
         }
         user.setEnabled(true);
-        userRepository.save(user);
+
 
         /*try {
             manager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
@@ -372,6 +372,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             return helper.fillResponseToken(ExceptionError.BAD_REQUEST,new Date(),"",-1);
         }*/
         Map<String, String> tokenGenerate=jwtUtils.generateToken(user.getUsername());
+        user.setToken(tokenGenerate.get("token"));
+        userRepository.save(user);
         return helper.fillResponseToken(ExceptionError.SUCCESSFUL,new Date(),tokenGenerate.get("token"),Long.parseLong(tokenGenerate.get("expireTime")));
     }
 }

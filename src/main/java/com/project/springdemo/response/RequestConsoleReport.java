@@ -1,8 +1,10 @@
 package com.project.springdemo.response;
 
+import com.project.springdemo.domain.Category;
 import com.project.springdemo.domain.User;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class RequestConsoleReport implements Serializable {
     private Long id;
@@ -10,7 +12,10 @@ public class RequestConsoleReport implements Serializable {
     private String description;
     private Long minAmount;
     private Long maxAmount;
-    private User user;
+    private long userId;
+    private String username;
+    private List<Category> categoryList;
+    private int categoryCount;
 
     public Long getId() {
         return id;
@@ -52,11 +57,35 @@ public class RequestConsoleReport implements Serializable {
         this.maxAmount = maxAmount;
     }
 
-    public User getUser() {
-        return user;
+    public long getUserId() {
+        return userId;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserId(long userId) {
+        this.userId = userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public List<Category> getCategoryList() {
+        return categoryList;
+    }
+
+    public void setCategoryList(List<Category> categoryList) {
+        this.categoryList = categoryList;
+    }
+
+    public int getCategoryCount() {
+        return categoryCount;
+    }
+
+    public void setCategoryCount(int categoryCount) {
+        this.categoryCount = categoryCount;
     }
 }

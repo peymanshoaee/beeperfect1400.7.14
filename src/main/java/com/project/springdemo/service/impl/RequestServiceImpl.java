@@ -63,9 +63,8 @@ public class RequestServiceImpl implements RequestService{
                 throw new ServiceException("Category is Null", ExceptionError.CATEGORY_MODEL_NOT_FOUND);
             }
             categoryList.add(category.get());
-
-
         }
+
         Request request=new Request();
 
         request.setUser(user);
@@ -102,13 +101,30 @@ public class RequestServiceImpl implements RequestService{
         return helper.fillMainConsoleResponse(ExceptionError.SUCCESSFUL);
     }
     @Override
-    public MainConsoleResponse updateRequest(Long id,String title,String desc,Long minAmount,
-                                             Long maxAmount,Long userId)throws ServiceException{
-        Request request=requestRepository.getById(id);
+    public MainConsoleResponse updateRequest(long id,String title,String desc,Long minAmount,
+                                             Long maxAmount,Long userId,List<String> categoryIds)throws ServiceException{
+        Request request=requestRepository.findById(id);
         if(request==null){
             log.error("Request Not Found");
             throw new ServiceException("Request Not Found", ExceptionError.REQUEST_MODEL_NOT_FOUND);
         }
+
+        if(categoryIds.size()==0){
+            log.error("Category is Null");
+            throw new ServiceException("Category is Null", ExceptionError.CATEGORY_MODEL_NOT_FOUND);
+        }
+
+        List<Category> categoryList=new ArrayList<>();
+        for (String strCategoryId : categoryIds){
+            Long categoryId=Long.valueOf(strCategoryId);
+            Optional<Category> category=categoryService.findById(categoryId);
+            if(category.isEmpty()){
+                log.error("Category is Null");
+                throw new ServiceException("Category is Null", ExceptionError.CATEGORY_MODEL_NOT_FOUND);
+            }
+            categoryList.add(category.get());
+        }
+
         if(title!=null && !title.equals("")){
             request.setTitle(title);
         }
@@ -116,7 +132,7 @@ public class RequestServiceImpl implements RequestService{
             request.setDescription(desc);
         }
         if(minAmount!=0 && minAmount>0){
-            request.setMaxAmount(minAmount);
+            request.setMinAmount(minAmount);
         }
         if(maxAmount!=0 && maxAmount>0){
             request.setMaxAmount(maxAmount);
@@ -128,14 +144,31 @@ public class RequestServiceImpl implements RequestService{
         }
         request.setUser(user);
 
+        //Delete RequestCategory By RequestId
+        List<RequestCategory>requestCategoryList=requestCategoryService.getListByRequestId(request.getId());
+        for(RequestCategory requestCategory:requestCategoryList){
+            requestCategoryService.delete(requestCategory);
+        }
+
 
         requestRepository.save(request);
+
+        //Insert RequestCategory with CategoryIds New
+        for(Category category:categoryList){
+            RequestCategory requestCategory=new RequestCategory();
+            requestCategory.setCategory(category);
+            requestCategory.setRequest(request);
+            requestCategory.setCreationDate(new Date());
+            requestCategoryService.save(requestCategory);
+        }
+
+
         return helper.fillMainConsoleResponse(ExceptionError.SUCCESSFUL);
     }
 
     @Override
     public RequestConsoleResponse getAllRequestByUserId(Long userId, Integer page, Integer size){
-        if(page == null){
+        if(page == null || page == 0){
             page=0;
         }
         if(size==null || size == 0){
@@ -160,9 +193,18 @@ public class RequestServiceImpl implements RequestService{
             value.setDescription(request.getDescription());
             value.setMinAmount(request.getMinAmount());
             value.setMaxAmount(request.getMaxAmount());
-            value.setUser(request.getUser());
+            value.setUserId(request.getUser().getId());
+            value.setUsername(request.getUser().getUsername());
 
-
+            List<RequestCategory> requestCategoryList=requestCategoryService.getListByRequestId(request.getId());
+            List<Category> categoryList=new ArrayList<>();
+            for(RequestCategory requestCategory:requestCategoryList){
+                categoryList.add(requestCategory.getCategory());
+            }
+            if(categoryList.size()!=0){
+                value.setCategoryList(categoryList);
+            }
+            value.setCategoryCount(categoryList.size());
             requestConsoleReportList.add(value);
         }
         RequestConsoleResponse response=new RequestConsoleResponse();
@@ -185,7 +227,19 @@ public class RequestServiceImpl implements RequestService{
         requestConsoleReport.setDescription(request.getDescription());
         requestConsoleReport.setMinAmount(request.getMinAmount());
         requestConsoleReport.setMaxAmount(request.getMaxAmount());
-        requestConsoleReport.setUser(request.getUser());
+        requestConsoleReport.setUserId(request.getUser().getId());
+        requestConsoleReport.setUsername(request.getUser().getUsername());
+
+        List<RequestCategory> requestCategoryList=requestCategoryService.getListByRequestId(request.getId());
+        List<Category> categoryList=new ArrayList<>();
+        for(RequestCategory requestCategory:requestCategoryList){
+            categoryList.add(requestCategory.getCategory());
+        }
+        if(categoryList.size()!=0){
+            requestConsoleReport.setCategoryList(categoryList);
+        }
+
+
         return requestConsoleReport;
 
     }

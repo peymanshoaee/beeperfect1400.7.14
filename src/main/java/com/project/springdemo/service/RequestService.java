@@ -11,8 +11,8 @@ public interface RequestService {
     MainConsoleResponse createRequest(String title, String desc, Long minAmount,
                                       Long maxAmount, Long userId, List<String> categoryIds)throws ServiceException;
 
-    MainConsoleResponse updateRequest(Long id,String title, String desc, Long minAmount,
-                                      Long maxAmount, Long userId)throws ServiceException;
+    MainConsoleResponse updateRequest(long id,String title, String desc, Long minAmount,
+                                      Long maxAmount, Long userId,List<String> categoryIds)throws ServiceException;
 
     RequestConsoleResponse getAllRequestByUserId(Long userId, Integer page, Integer size);
 

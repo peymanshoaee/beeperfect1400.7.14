@@ -210,11 +210,11 @@ public class MainController {
         }
     }
 
-    /*@PostMapping(value = "request/update")
+    @PostMapping(value = "request/update")
     ResponseEntity<MainConsoleResponse> updateRequest(@RequestBody RequestRequest model){
         try{
             return ResponseEntity.status(HttpStatus.OK).body(requestService.updateRequest(model.getId(),model.getTitle(),model.getDesc(),
-                    model.getMinAmount(),model.getMaxAmount(),model.getUserId()));
+                    model.getMinAmount(),model.getMaxAmount(),model.getUserId(),model.getCategoryIds()));
         }
         catch (ServiceException  e) {
             log.error(LOG_SERVICE_EXCEPTION, e.getMessage());
@@ -239,8 +239,9 @@ public class MainController {
             RequestConsoleReport requestConsoleReport=new RequestConsoleReport();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillRequestResponse(requestConsoleReport,e.getStatus()));
         }
-    }*/
+    }
     //endregion
+
 
     /*@GetMapping("/jwt/hello")
     public @ResponseBody  String getHello(){

@@ -20,7 +20,7 @@ public interface UserService  {
     UserConsoleResponse getUserList(String username, Integer page, Integer size);
     void deleteByUser(UserRequest user );
     MainConsoleResponse retrieveImage(Long id) throws ServiceException, IOException;
-    User getUserById(Long id);
+    User getUserById(long id);
     UserConsoleReport findByUserNameAndPassword(String username,String password) throws ServiceException, IOException;
     LoginResponse createTempUser(String username, String password, String firstName, String lastName, boolean tos,boolean business)throws ServiceException;
     LoginResponse verifyUser(String token,String verifyCode) throws ServiceException;

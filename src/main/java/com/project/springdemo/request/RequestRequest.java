@@ -9,7 +9,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RequestRequest implements Serializable {
     @JsonProperty("id")
-    private Long id;
+    private long id;
 
     @JsonProperty("title")
     private String title;
@@ -29,11 +29,11 @@ public class RequestRequest implements Serializable {
     @JsonProperty("categoryIds")
     private List<String> categoryIds;
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
 

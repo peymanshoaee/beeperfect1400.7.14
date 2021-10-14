@@ -228,6 +228,12 @@ public class MainController {
         return ResponseEntity.status(HttpStatus.OK).body( requestService.getAllRequestByUserId(requestConsoleRequest.getUserId(),requestConsoleRequest.getPage(),requestConsoleRequest.getSize()) );
     }
 
+    @PostMapping("/request/listByCategoryCode")
+    public @ResponseBody
+    ResponseEntity<RequestConsoleResponse> getAllRequestByCategoryCode(@RequestBody RequestConsoleRequest requestConsoleRequest) {
+        return ResponseEntity.status(HttpStatus.OK).body( requestService.getAllRequestByCategoryCode(requestConsoleRequest.getCategoryCode(),requestConsoleRequest.getPage(),requestConsoleRequest.getSize()) );
+    }
+
     @GetMapping(value = "/request/getById/{id}")
     public @ResponseBody ResponseEntity<RequestResponse> findRequestById(@PathVariable("id") Long id) {
 
@@ -240,6 +246,7 @@ public class MainController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(helper.fillRequestResponse(requestConsoleReport,e.getStatus()));
         }
     }
+
     //endregion
 
 

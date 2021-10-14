@@ -11,4 +11,5 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     Request findById(long id);
     Page<Request> findByUser_Id(Long user_Id, Pageable pageable);
 
+
 }

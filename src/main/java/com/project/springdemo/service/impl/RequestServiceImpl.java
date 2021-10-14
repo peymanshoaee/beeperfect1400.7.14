@@ -184,6 +184,12 @@ public class RequestServiceImpl implements RequestService{
         return setRequest(result.getContent(),result.getTotalElements(),result.getTotalPages(), result.getNumberOfElements());
     }
 
+    @Override
+    public RequestConsoleReport findById(Long id) throws ServiceException{
+        return convertToJson(requestRepository.findById(id).orElseThrow(() -> new ServiceException("Request not found" , ExceptionError.REQUEST_MODEL_NOT_FOUND)));
+
+    }
+
     private RequestConsoleResponse setRequest(List<Request> result, long totalElements, int totalPages, int numberOfElements){
         List<RequestConsoleReport> requestConsoleReportList=new ArrayList<>();
         for(Request request:result ){
@@ -215,11 +221,6 @@ public class RequestServiceImpl implements RequestService{
         return response;
     }
 
-    public RequestConsoleReport findById(Long id) throws ServiceException{
-        return convertToJson(requestRepository.findById(id).orElseThrow(() -> new ServiceException("Request not found" , ExceptionError.REQUEST_MODEL_NOT_FOUND)));
-
-    }
-
     public RequestConsoleReport convertToJson(Request request){
         RequestConsoleReport requestConsoleReport=new RequestConsoleReport();
         requestConsoleReport.setId(request.getId());
@@ -242,5 +243,10 @@ public class RequestServiceImpl implements RequestService{
 
         return requestConsoleReport;
 
+    }
+
+    @Override
+    public RequestConsoleResponse getAllRequestByCategoryCode(String categoryCode, Integer page, Integer size){
+        return requestCategoryService.findAllByCategoryCode(categoryCode,page,size);
     }
 }

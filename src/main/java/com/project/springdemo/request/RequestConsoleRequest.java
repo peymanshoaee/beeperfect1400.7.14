@@ -11,6 +11,8 @@ public class RequestConsoleRequest implements Serializable {
     private Integer page;
     @JsonProperty("size")
     private Integer size;
+    @JsonProperty("categoryCode")
+    private String categoryCode;
 
     public Long getUserId() {
         return userId;
@@ -34,5 +36,13 @@ public class RequestConsoleRequest implements Serializable {
 
     public void setSize(Integer size) {
         this.size = size;
+    }
+
+    public String getCategoryCode() {
+        return categoryCode;
+    }
+
+    public void setCategoryCode(String categoryCode) {
+        this.categoryCode = categoryCode;
     }
 }

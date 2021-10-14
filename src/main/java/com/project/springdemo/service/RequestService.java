@@ -17,4 +17,6 @@ public interface RequestService {
     RequestConsoleResponse getAllRequestByUserId(Long userId, Integer page, Integer size);
 
     RequestConsoleReport findById(Long id) throws ServiceException;
+
+    RequestConsoleResponse getAllRequestByCategoryCode(String categoryCode, Integer page, Integer size);
 }

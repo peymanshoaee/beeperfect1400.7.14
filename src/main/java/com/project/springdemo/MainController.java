@@ -24,6 +24,10 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
 
+
+
+
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 //@RequestMapping(path = "/api/console")
 public class MainController {
@@ -97,7 +101,7 @@ public class MainController {
         }
     }
 
-    @GetMapping("/user/getByUsername")
+    @PostMapping("/user/getByUsername")
     public @ResponseBody ResponseEntity<UserResponse> findUserByUserNameAndPassword(@RequestBody JwtAuth jwtAuth){
         try{
             UserConsoleReport userConsoleReport = userService.findByUserNameAndPassword(jwtAuth.getUsername(),jwtAuth.getPassword());

@@ -24,19 +24,19 @@ public class User implements Serializable, UserDetails {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "username")
+    @Column(name = "username" , length=45 , unique = true)
     private String username;
 
-    @Column(name = "password")
+    @Column(name = "password" , length=15 )
     private String password;
 
-    @Column(name = "first_name")
+    @Column(name = "first_name" , length=45 )
     private String firstName;
 
-    @Column(name = "last_name")
+    @Column(name = "last_name" , length=45 )
     private String lastName;
 
-    @Column(name = "nick_name")
+    @Column(name = "nick_name" , length = 15)
     private String nickName;
 
     @Column(name = "url")
